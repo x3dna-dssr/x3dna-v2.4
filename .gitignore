@@ -1,0 +1,23 @@
+# OS metadata
+.DS_Store
+
+# Compiled object and library files
+*.o
+*.a
+
+# Compiled C binaries in bin/ (keep the 4 Ruby scripts tracked!)
+bin/alc2img
+bin/analyze
+bin/cehs
+bin/comb_str
+bin/ex_str
+bin/fiber
+bin/find_pair
+bin/frame_mol
+bin/get_part
+bin/pdb2img
+bin/r3d_atom
+bin/rebuild
+bin/rotate_mol
+bin/stack2img
+bin/std_base

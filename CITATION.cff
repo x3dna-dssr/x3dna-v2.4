@@ -1,0 +1,85 @@
+cff-version: 1.2.0
+message: "If you use 3DNA in your work, please cite the following publications."
+title: "3DNA (v2.4): A Versatile, Integrated Software System for the Analysis, Rebuilding and Visualization of Three-Dimensional Nucleic-Acid Structures"
+version: "2.4.8"
+date-released: 2023-11-10
+url: "https://github.com/x3dna-dssr/x3dna-v2.4"
+license: BSD-3-Clause
+authors:
+  - family-names: "Lu"
+    given-names: "Xiang-Jun"
+  - family-names: "Olson"
+    given-names: "Wilma K."
+preferred-citation:
+  type: article
+  title: "3DNA: a versatile, integrated software system for the analysis, rebuilding and visualization of three-dimensional nucleic-acid structures"
+  authors:
+    - family-names: "Lu"
+      given-names: "Xiang-Jun"
+    - family-names: "Olson"
+      given-names: "Wilma K."
+  journal: "Nature Protocols"
+  volume: 3
+  issue: 7
+  start: 1213
+  end: 1227
+  year: 2008
+  doi: "10.1038/nprot.2008.104"
+references:
+  - type: article
+    title: "3DNA: a software package for the analysis, rebuilding and visualization of three-dimensional nucleic acid structures"
+    authors:
+      - family-names: "Lu"
+        given-names: "Xiang-Jun"
+      - family-names: "Olson"
+        given-names: "Wilma K."
+    journal: "Nucleic Acids Research"
+    volume: 31
+    issue: 17
+    start: 5108
+    end: 5121
+    year: 2003
+    doi: "10.1093/nar/gkg680"
+  - type: article
+    title: "Analyzing and building nucleic acid structures with 3DNA"
+    authors:
+      - family-names: "Colasanti"
+        given-names: "Andrew V."
+      - family-names: "Lu"
+        given-names: "Xiang-Jun"
+      - family-names: "Olson"
+        given-names: "Wilma K."
+    journal: "Journal of Visualized Experiments"
+    issue: 74
+    start: "e4401"
+    year: 2013
+    doi: "10.3791/4401"
+  - type: article
+    title: "Characterization of base pair geometry"
+    authors:
+      - family-names: "Lu"
+        given-names: "Xiang-Jun"
+      - family-names: "Olson"
+        given-names: "Wilma K."
+    journal: "Computational Crystallography Newsletter"
+    volume: 7
+    issue: 1
+    start: 6
+    end: 9
+    year: 2016
+  - type: article
+    title: "Web 3DNA 2.0 for the analysis, visualization, and modeling of 3D nucleic acid structures"
+    authors:
+      - family-names: "Li"
+        given-names: "Shuxiang"
+      - family-names: "Olson"
+        given-names: "Wilma K."
+      - family-names: "Lu"
+        given-names: "Xiang-Jun"
+    journal: "Nucleic Acids Research"
+    volume: 47
+    issue: "W1"
+    start: "W26"
+    end: "W34"
+    year: 2019
+    doi: "10.1093/nar/gkz394"
