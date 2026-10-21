@@ -16,8 +16,8 @@ module Utils
         homedir = ENV['X3DNA']
         unless homedir                  # X3DNA environment variable not set
             home = ENV['HOME'] || ENV['HOMEDRIVE']
-            if home && Dir.exists?("#{home}/x3dna-v2.3")
-                homedir = "#{home}/x3dna-v2.3"
+            if home && Dir.exists?("#{home}/x3dna-v2.4")
+                homedir = "#{home}/x3dna-v2.4"
             else
                 abort "Please set the X3DNA environment variable."
             end

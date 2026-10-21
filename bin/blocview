@@ -4,9 +4,9 @@
 ###     3DNA v2.4.9-2025dec09, created and maintained by xiangjun@x3dna.org
 
 $VERBOSE = true
-require 'fileutils'
-require ENV['X3DNA'] + '/lib/trollop'
-require ENV['X3DNA'] + '/lib/miscs'
+require "fileutils"
+require ENV["X3DNA"] + "/lib/trollop"
+require ENV["X3DNA"] + "/lib/miscs"
 
 def main
     Utils.dcmnfile              # tidy up the playground
@@ -30,12 +30,12 @@ def main
 end
 
 def remove_nt_backbone(msfile)
-    File.open("temp.msc", "w") do |aFile|
+    File.open("temp.msc", "w") do |afile|
         File.open(msfile).each_line do |line|
-            if line =~ /^\s*double-helix/i
-                aFile.puts "! #{line}" # commented it out
+            if /^\s*double-helix/i.match?(line)
+                afile.puts "! #{line}" # commented it out
             else
-                aFile.puts line
+                afile.puts line
             end
         end
     end
@@ -45,7 +45,7 @@ end
 def has_coordinates(pdbfile)
     atom_hetatm = false
     File.open(pdbfile).each_line do |line|
-        if line =~ /^(ATOM  |HETATM)/i
+        if /^(ATOM  |HETATM)/i.match?(line)
             atom_hetatm = true
             break
         end
@@ -84,7 +84,7 @@ def get_component_scenes(opts)
         end
 
         # get input for ligands
-        Utils.run_cmd("#{$x3dna}get_part -t #{$dft_pdbfile} #{$temp_pdb} #{$msg}");
+        Utils.run_cmd("#{$x3dna}get_part -t #{$dft_pdbfile} #{$temp_pdb} #{$msg}")
     end
 
     if has_coordinates($temp_pdb)
@@ -101,10 +101,10 @@ end
 def get_r3d_header(opts)
     opt = opts[:scale] ? "-s=#{opts[:scale]}" : ""
     Utils.run_cmd("#{$x3dna}r3d_atom #{opt} #{$dft_pdbfile} #{$temp_r3d} #{$msg}")
-    File.open(opts[:r3dfile], "w") do |oFile|
-        File.open($temp_r3d) do |iFile|
-            while line = iFile.gets
-                oFile.puts line if $. <= 20
+    File.open(opts[:r3dfile], "w") do |ofile|
+        File.open($temp_r3d) do |ifile|
+            while (line = ifile.gets)
+                ofile.puts line if $. <= 20
             end
         end
     end
@@ -117,15 +117,19 @@ def set_view(opts)
 
     return if opts[:original]   # use the original PDB coordinates
 
-    opt = opts[:protein] ? "-p" : opts[:all] ? "-a" : "-b"
+    opt = if opts[:protein]
+        "-p"
+    else
+        opts[:all] ? "-a" : "-b"
+    end
     Utils.run_cmd("#{$x3dna}rotate_mol -c #{opt} #{$dft_pdbfile} #{$temp_pdb} #{$msg}")
 
     if opts[:xrot] || opts[:yrot] || opts[:zrot]
         rotfile = "blocview_rotxyz.ang"
-        File.open(rotfile, "w") do |aFile|
-            aFile.puts "by rotation x #{opts[:xrot]}\n" if opts[:xrot]
-            aFile.puts "by rotation y #{opts[:yrot]}\n" if opts[:yrot]
-            aFile.puts "by rotation z #{opts[:zrot]}\n" if opts[:zrot]
+        File.open(rotfile, "w") do |afile|
+            afile.puts "by rotation x #{opts[:xrot]}\n" if opts[:xrot]
+            afile.puts "by rotation y #{opts[:yrot]}\n" if opts[:yrot]
+            afile.puts "by rotation z #{opts[:zrot]}\n" if opts[:zrot]
         end
         Utils.run_cmd("#{$x3dna}rotate_mol -c -r=#{rotfile} #{$temp_pdb} #{$dft_pdbfile} #{$msg}")
     else
@@ -148,48 +152,48 @@ end
 
 def docinfo
     sline = Utils.separation_line
-    <<TXT
-#{sline}
-Generate a schematic image which combines base block representation
-with protein ribbon. The image has informative color coding for the
-nucleic acid part and is set in the "best view" by default. MolScript
-Raster3D (or PyMOL) and ImageMagick must be properly installed.
+    <<~TXT
+        #{sline}
+        Generate a schematic image which combines base block representation
+        with protein ribbon. The image has informative color coding for the
+        nucleic acid part and is set in the "best view" by default. MolScript
+        Raster3D (or PyMOL) and ImageMagick must be properly installed.
 
-Usage:
-        #{$prg} [options] PDBFile
-Examples:
-        #{$prg} -i 355d.png 355d.pdb
-             # generate an image named '355d.png'
-        #{$prg} -i none -r 355d.r3d 355d.pdb
-             # generate "355d.r3d" to be fed to "render/pymol"
-Options:
-#{sline}
-TXT
+        Usage:
+                #{$prg} [options] PDBFile
+        Examples:
+                #{$prg} -i 355d.png 355d.pdb
+                     # generate an image named '355d.png'
+                #{$prg} -i none -r 355d.r3d 355d.pdb
+                     # generate "355d.r3d" to be fed to "render/pymol"
+        Options:
+        #{sline}
+    TXT
 end
 
 def parse_options
-    opts = Trollop::options do
+    opts = Trollop.options do
         version Utils.version
         banner docinfo
 
-        opt :imgfile, "name of image file", :default => "blocview.png"
-        opt :r3dfile, "name of .r3d file", :default => "blocview.r3d"
-        opt :dpi_pymol, "create PyMOL ray-traced image at specific DPI", :type => :integer
-        opt :scale, "set scale factor (for 'render' of Raster3D)", :type => :float
-        opt :xrot, "rotation angle about x-axis", :type => :float
-        opt :yrot, "rotation angle about y-axis", :type => :float
-        opt :zrot, "rotation angle about z-axis", :type => :float
-        opt :original, "use original coordinates", :default => false
-        opt :ball_and_stick, "get a ball-and-stick image", :default => false
-        opt :minor_groove, "show minor groove in black", :default => false
-        opt :p_base_ring, "use only P and base ring atoms", :default => false, :short => "-c"
-        opt :no_ds, "do not show double-helix ribbon", :default => false
-        opt :protein, "set best view based on protein atoms", :default => false
-        opt :all, "set best view based on all atoms", :default => false
+        opt :imgfile, "name of image file", default: "blocview.png"
+        opt :r3dfile, "name of .r3d file", default: "blocview.r3d"
+        opt :dpi_pymol, "create PyMOL ray-traced image at specific DPI", type: :integer
+        opt :scale, "set scale factor (for 'render' of Raster3D)", type: :float
+        opt :xrot, "rotation angle about x-axis", type: :float
+        opt :yrot, "rotation angle about y-axis", type: :float
+        opt :zrot, "rotation angle about z-axis", type: :float
+        opt :original, "use original coordinates", default: false
+        opt :ball_and_stick, "get a ball-and-stick image", default: false
+        opt :minor_groove, "show minor groove in black", default: false
+        opt :p_base_ring, "use only P and base ring atoms", default: false, short: "-c"
+        opt :no_ds, "do not show double-helix ribbon", default: false
+        opt :protein, "set best view based on protein atoms", default: false
+        opt :all, "set best view based on all atoms", default: false
     end
 
     opts[:all] = false if opts[:protein] && opts[:all]
-    opts[:imgfile] += ".png" unless opts[:imgfile] =~ /(^none|\.png)$/i
+    opts[:imgfile] += ".png" unless /(^none|\.png)$/i.match?(opts[:imgfile])
 
     opts
 end

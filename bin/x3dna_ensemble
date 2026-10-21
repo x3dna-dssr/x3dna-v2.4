@@ -4,7 +4,7 @@
 ###     3DNA v2.4.9-2025dec09, created and maintained by xiangjun@x3dna.org
 
 $VERBOSE = true
-require ENV['X3DNA'] + '/lib/ensemble'
+require ENV["X3DNA"] + "/lib/ensemble"
 
 $prg = File.basename($0)
 $sline = Utils.separation_line
@@ -13,17 +13,17 @@ cmds_info = {
     "analyze" => "analyze MODEL/ENDMDL delineated ensemble (NMR or MD)",
     "extract" => "extract structural parameters after running 'analyze'",
     "reorient" => "reorient models to a particular frame/orientation",
-    "blocview" => "generate a base block schematic image",
+    "blocview" => "generate a base block schematic image"
 }
 sub_cmds = cmds_info.keys.sort
-lst_cmds = sub_cmds.join(', ')
+lst_cmds = sub_cmds.join(", ")
 str_cmds = sub_cmds.map { |cmd| "        #{cmd} -- #{cmds_info[cmd]}\n" }.join("")
 
-Trollop::options do             # global options
+Trollop.options do             # global options
     version Utils.version
-    banner $sline + "\n" +
-        "Utilities for the analysis and visualization of an ensemble\n" +
-        "    Usage: #{$prg} [-h|-v] sub-command [-h] [options]\n" +
+    banner $sline + "\n" \
+        "Utilities for the analysis and visualization of an ensemble\n" \
+        "    Usage: #{$prg} [-h|-v] sub-command [-h] [options]\n" \
         "    where sub-command must be one of: \n" +
         str_cmds + $sline
     stop_on sub_cmds
