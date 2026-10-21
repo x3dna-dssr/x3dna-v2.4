@@ -64,6 +64,14 @@ For a foundational tutorial and step-by-step mathematical walkthrough of the qua
 
 ---
 
+## Getting Help
+
+* **Community & Discussions:** For usage questions, parameter interpretations, and workflow advice, join the [GitHub Discussions](https://github.com/orgs/x3dna-dssr/discussions) on the `x3dna-dssr` organization.
+* **Bug Reports:** For compilation issues or verifiable software bugs, please open an issue in [GitHub Issues](https://github.com/x3dna-dssr/x3dna-v2.4/issues).
+* **Historical Archive:** Search legacy discussions (2011–2026) on the read-only [3DNA Forum](http://forum.x3dna.org/).
+
+---
+
 ## Citation
 
 If you use or reference 3DNA in your work, please cite at least one of the primary 3DNA publications (1–2), along with the relevant methodological references (3–6) as appropriate:
@@ -159,10 +167,6 @@ If you use or reference 3DNA in your work, please cite at least one of the prima
 ```
 
 ---
-
-## Community & Support
-
-For questions, comments, or discussions regarding the 3DNA/DSSR ecosystem, please visit [GitHub Discussions](https://github.com/orgs/x3dna-dssr/discussions).
 
 ## License
 
