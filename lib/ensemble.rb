@@ -2,12 +2,12 @@
 ###     3DNA v2.4.9-2025dec09, created and maintained by xiangjun@x3dna.org
 
 $VERBOSE = true
-require 'fileutils'
+require "fileutils"
 
-abort "Please set the 3DNA environment variable" unless ENV['X3DNA']
-require ENV['X3DNA'] + '/lib/trollop'
-require ENV['X3DNA'] + '/lib/miscs'
-require ENV['X3DNA'] + '/lib/parser'
+abort "Please set the 3DNA environment variable" unless ENV["X3DNA"]
+require ENV["X3DNA"] + "/lib/trollop"
+require ENV["X3DNA"] + "/lib/miscs"
+require ENV["X3DNA"] + "/lib/parser"
 
 module Ensemble
     def self.set_globals        # analyze/reorient
@@ -35,8 +35,10 @@ module Ensemble
             if opts[:ensemble]
                 ensemble = opts[:ensemble]
                 models = Utils.extract_model_numbers_from_ensemble_pdb(ensemble)
-                Utils.fatal("Ensemble #{ensemble} contains #{models.size} models: " +
-                            "#{models.first}...#{models.last}") if opts[:info]
+                if opts[:info]
+                    Utils.fatal("Ensemble #{ensemble} contains #{models.size} models: " \
+                                "#{models.first}...#{models.last}")
+                end
             elsif opts[:models]
                 ensemble, models = Utils.readlist_model_numbers(opts[:models])
             elsif opts[:list]
@@ -60,40 +62,40 @@ module Ensemble
         end
 
         def write_out_parameters(all_pars, outfile, entries)
-            File.open(outfile, "w") do |aFile|
-                aFile.puts <<TXT
-# Detailed output generated with '#{$prg} analyze' of a MODEL/ENDMDL
-#     delineated ensemble of DNA/RNA structures. To extract parameters, run:
-#     '#{$prg} extract'
-TXT
+            File.open(outfile, "w") do |afile|
+                afile.puts <<~TXT
+                    # Detailed output generated with '#{$prg} analyze' of a MODEL/ENDMDL
+                    #     delineated ensemble of DNA/RNA structures. To extract parameters, run:
+                    #     '#{$prg} extract'
+                TXT
                 all_pars[0].keys.sort.each do |pname|
-                    aFile.puts "\n<#{pname}>\t\t# with #{all_pars[0][pname].size} data columns"
+                    afile.puts "\n<#{pname}>\t\t# with #{all_pars[0][pname].size} data columns"
                     all_pars.each_with_index do |pdata, idx| # loop over each model
                         next unless pdata
                         c0 = File.basename(entries[idx].to_s.downcase, ".*")
-                        str = pdata[pname].map { |x| x.sub(/---/, 'na') }.join("\t")
-                        aFile.puts "#{c0}\t#{str}"
+                        str = pdata[pname].map { |x| x.sub("---", "na") }.join("\t")
+                        afile.puts "#{c0}\t#{str}"
                     end
-                    aFile.puts "</#{pname}>"
+                    afile.puts "</#{pname}>"
                 end
             end
         end
 
-        def run_analyze_parse_parameters(opts, renew_bpfile=false)
+        def run_analyze_parse_parameters(opts, renew_bpfile = false)
             $num_bp = Utils.update_bpfile(opts[:bpfile], $temp_model) if renew_bpfile
             chk_ring = opts[:ring] ? "-ring" : ""
             Utils.run_cmd("#{$x3dna}analyze -c #{chk_ring} #{$temp_model}.inp #{$msg}")
             $errcmd ? nil : Parse_3DNA.new($num_bp, "#{$temp_model}.out").parse_3dna_output
         end
 
-        def run_single_strand_analyze_parse_parameters(opts, renew_ntlist=false)
+        def run_single_strand_analyze_parse_parameters(opts, renew_ntlist = false)
             $num_nt = Utils.update_ntlist($temp_model) if renew_ntlist
             chk_ring = opts[:ring] ? "-ring" : ""
             Utils.run_cmd("#{$x3dna}analyze #{chk_ring} #{$temp_model}.nts #{$msg}")
             $errcmd ? nil : Parse_3DNA.new($num_nt, "#{$temp_model}.outs").parse_3dna_single_output
         end
 
-        def run_torsion_analyze_parse_parameters(opts, renew_ntlist=false)
+        def run_torsion_analyze_parse_parameters(opts, renew_ntlist = false)
             $num_nt = Utils.update_ntlist($temp_model) if renew_ntlist
             Utils.run_cmd("#{$x3dna}analyze -tor=#{$temp_model}.tor #{$temp_model}.pdb #{$msg}")
             $errcmd ? nil : Parse_3DNA.new($num_nt, "#{$temp_model}.tor").parse_3dna_torsion_output
@@ -145,77 +147,77 @@ TXT
         end
 
         def docinfo
-            sub = 'analyze'
-            <<TXT
-#{$sline}
-Analyze a MODEL/ENDMDL delineated ensemble of NMR structures or MD
-trajectories. All models must correspond to different conformations
-of the same molecule. For the analysis of duplexes (default), a template
-base-pair input file, generated with 'find_pair' and manually edited
-as necessary, must be provided.
+            sub = "analyze"
+            <<~TXT
+                #{$sline}
+                Analyze a MODEL/ENDMDL delineated ensemble of NMR structures or MD
+                trajectories. All models must correspond to different conformations
+                of the same molecule. For the analysis of duplexes (default), a template
+                base-pair input file, generated with 'find_pair' and manually edited
+                as necessary, must be provided.
 
-Usage:
-        #{$prg} #{sub} options
-Examples:
-        #{$prg} #{sub} -b bpfile.dat -e sample_md0.pdb
-             # 21 models (0-20); output (default): '#{$oname}.out'
-             # also generate '#{$model_list}', see example below
-        #{$prg} #{sub} -b bpfile.dat -m #{$model_list} -o #{$oname}2.out
-             # diff #{$oname}.out #{$oname}2.out
+                Usage:
+                        #{$prg} #{sub} options
+                Examples:
+                        #{$prg} #{sub} -b bpfile.dat -e sample_md0.pdb
+                             # 21 models (0-20); output (default): '#{$oname}.out'
+                             # also generate '#{$model_list}', see example below
+                        #{$prg} #{sub} -b bpfile.dat -m #{$model_list} -o #{$oname}2.out
+                             # diff #{$oname}.out #{$oname}2.out
 
-        #{$prg} #{sub} -b bpfile.dat -p 'pdbdir/model_*.pdb' -o #{$oname}3.out
-             # note to quote the -p option; 20 models (1-20)
-             # also generate '#{$pdb_list}', see example below
-        #{$prg} #{sub} -b bpfile.dat -l #{$pdb_list} -o #{$oname}4.out
-             # diff #{$oname}3.out #{$oname}4.out
-             # note the order of the models: 1, 10..19, 2, 20, 3..9
+                        #{$prg} #{sub} -b bpfile.dat -p 'pdbdir/model_*.pdb' -o #{$oname}3.out
+                             # note to quote the -p option; 20 models (1-20)
+                             # also generate '#{$pdb_list}', see example below
+                        #{$prg} #{sub} -b bpfile.dat -l #{$pdb_list} -o #{$oname}4.out
+                             # diff #{$oname}3.out #{$oname}4.out
+                             # note the order of the models: 1, 10..19, 2, 20, 3..9
 
-        #{$prg} #{sub} -s -e sample_md0.pdb
-             # perform a 'single'-stranded analysis
-        #{$prg} #{sub} -t -e sample_md0.pdb
-             # calculate all 'torsion' angles
+                        #{$prg} #{sub} -s -e sample_md0.pdb
+                             # perform a 'single'-stranded analysis
+                        #{$prg} #{sub} -t -e sample_md0.pdb
+                             # calculate all 'torsion' angles
 
-        find_pair 355d.pdb 355d.bps
-        #{$prg} #{sub} -b 355d.bps --one 355d.pdb
-             # process the structure file 355d.pdb specified in 355d.bps
-Options:
-#{$sline}
-TXT
+                        find_pair 355d.pdb 355d.bps
+                        #{$prg} #{sub} -b 355d.bps --one 355d.pdb
+                             # process the structure file 355d.pdb specified in 355d.bps
+                Options:
+                #{$sline}
+            TXT
         end
 
         def parse_options
             txt = docinfo
-            opts = Trollop::options do
+            opts = Trollop.options do
                 banner txt      # cannot directly call docinfo
-                opt :bpfile, "Name of file containing base-pairing info", :type => :string
-                opt :outfile, "Output file", :default => "#{$oname}.out"
+                opt :bpfile, "Name of file containing base-pairing info", type: :string
+                opt :outfile, "Output file", default: "#{$oname}.out"
 
-                opt :single, "Single-stranded DNA/RNA", :default => false
-                opt :torsion, "Torsion angles", :default => false
-                opt :ring, "Base ring center & normal vector", :default => false
+                opt :single, "Single-stranded DNA/RNA", default: false
+                opt :torsion, "Torsion angles", default: false
+                opt :ring, "Base ring center & normal vector", default: false
 
-                opt :ensemble, "Ensemble delineated with MODEL/ENDMDL pairs", :type => :string
-                opt :models, "File containing an explicit list of model numbers", :type => :string
-                opt :pattern, "Pattern of model files to process (e.g., *.pdb)", :type => :string
-                opt :list, "File containing an explicit list of models", :type => :string
-                opt :one, "One regular structure [special case]", :type => :string
+                opt :ensemble, "Ensemble delineated with MODEL/ENDMDL pairs", type: :string
+                opt :models, "File containing an explicit list of model numbers", type: :string
+                opt :pattern, "Pattern of model files to process (e.g., *.pdb)", type: :string
+                opt :list, "File containing an explicit list of models", type: :string
+                opt :one, "One regular structure [special case]", type: :string
 
-                opt :info, "Show only model info in the ensemble [with -e]", :default => false
+                opt :info, "Show only model info in the ensemble [with -e]", default: false
 
-                opt :errlog, "Print error message instead of abort program", :default => false
+                opt :errlog, "Print error message instead of abort program", default: false
             end
             k = Utils.count_set_options([:ensemble, :models, :pattern, :list, :one], opts)
             Utils.fatal("Specify only one of: ensemble|models|pattern|list|one") unless k == 1
 
-            Trollop::die :ensemble, "must exist" if opts[:ensemble] && !File.exist?(opts[:ensemble])
-            Trollop::die :models, "must exist" if opts[:models] && !File.exist?(opts[:models])
-            Trollop::die :list, "must exist" if opts[:list] && !File.exist?(opts[:list])
-            Trollop::die :one, "must exist" if opts[:one] && !File.exist?(opts[:one])
+            Trollop.die :ensemble, "must exist" if opts[:ensemble] && !File.exist?(opts[:ensemble])
+            Trollop.die :models, "must exist" if opts[:models] && !File.exist?(opts[:models])
+            Trollop.die :list, "must exist" if opts[:list] && !File.exist?(opts[:list])
+            Trollop.die :one, "must exist" if opts[:one] && !File.exist?(opts[:one])
 
             unless (opts[:info] && opts[:ensemble]) || opts[:single] || opts[:torsion]
-                Trollop::die :bpfile, "must be specified" unless opts[:bpfile]
-                Trollop::die :bpfile, "cannot be empty" if opts[:bpfile].empty?
-                Trollop::die :bpfile, "must exist" unless File.exist?(opts[:bpfile])
+                Trollop.die :bpfile, "must be specified" unless opts[:bpfile]
+                Trollop.die :bpfile, "cannot be empty" if opts[:bpfile].empty?
+                Trollop.die :bpfile, "must exist" unless File.exist?(opts[:bpfile])
             end
 
             opts
@@ -263,8 +265,8 @@ TXT
             if opts[:outfile] == "stdout"
                 puts partxt
             else
-                File.open(opts[:outfile], "w") do |aFile|
-                    aFile.puts partxt
+                File.open(opts[:outfile], "w") do |afile|
+                    afile.puts partxt
                 end
             end
         end
@@ -272,8 +274,8 @@ TXT
         def select_all_parameters(parslst, opts)
             parslst.each do |par|
                 partxt = extract_one_parameter(par, opts)
-                File.open("#{$oname}_#{par}.out", "w") do |aFile|
-                    aFile.puts partxt
+                File.open("#{$oname}_#{par}.out", "w") do |afile|
+                    afile.puts partxt
                 end
             end
         end
@@ -289,7 +291,7 @@ TXT
             else                # name
                 matches = []
                 parslst.each_with_index do |p, k|
-                    matches << k if p =~ /^#{par_name}/i  # case insensitive
+                    matches << k if /^#{par_name}/i.match?(p)  # case insensitive
                 end
                 num = matches.size
                 if num == 1
@@ -301,13 +303,13 @@ TXT
                     end
                     Utils.fatal("Please be specific and try again.")
                 else
-                    Utils.fatal("Input '-p #{par_name}' matches nothing.\n" +
+                    Utils.fatal("Input '-p #{par_name}' matches nothing.\n" \
                                 "Please try: '#{$prg} -l' to see a full list of parameters.")
                 end
             end
 
             par = parslst[okidx] # full parameter name
-            $stderr.puts "You've pick paramter: [%2d] %-20s" % [okidx + 1, par]
+            warn "You've pick paramter: [%2d] %-20s" % [okidx + 1, par]
 
             par
         end
@@ -328,17 +330,17 @@ TXT
             ib, ie = opts[:end_bps]
 
             File.open(opts[:fromfile]).each_line do |line|
-                if line =~ /^\s*<#{par}>/i
+                if /^\s*<#{par}>/i.match?(line)
                     found = true
                     next
                 end
-                break if line =~ /^\s*<\/#{par}>/i
+                break if /^\s*<\/#{par}>/i.match?(line)
                 if found
                     items = line.split("\t")
-                    if opts[:no_1col]
-                        selected = items[(ib+1)..(-ie-1)]
+                    selected = if opts[:no_1col]
+                        items[(ib + 1)..(-ie - 1)]
                     else        # with first column for row label
-                        selected = items.values_at(0, (ib+1)..(-ie-1))
+                        items.values_at(0, (ib + 1)..(-ie - 1))
                     end
                     partxt << selected
                 end
@@ -353,35 +355,35 @@ TXT
         end
 
         def docinfo
-            sub = 'extract'
-            <<TXT
-#{$sline}
-Extract 3DNA structural parameters of an ensemble of NMR structures or
-MD trajectories, after running '#{$prg} analyze'. The extracted
-parameters are intended to be exported into Excel, Matlab and R etc for
-further data analysis/visualization.
+            sub = "extract"
+            <<~TXT
+                #{$sline}
+                Extract 3DNA structural parameters of an ensemble of NMR structures or
+                MD trajectories, after running '#{$prg} analyze'. The extracted
+                parameters are intended to be exported into Excel, Matlab and R etc for
+                further data analysis/visualization.
 
-Usage:
-        #{$prg} #{sub} options
-Examples:
-        #{$prg} #{sub} -l
-             # to see a list of all parameters
-        #{$prg} #{sub} -p prop
-             # for propeller, no need to specify full: -p pr suffices
-             # -p 36 also fine (see above); use '#{$oname}.out'
-        #{$prg} #{sub} -p slide -s , -f #{$oname}3.out
-             # comma separated, from file '#{$oname}3.out'
-        #{$prg} #{sub} -p roll -s ' ' -n -o roll.dat
-             # space separated, no row-label, to file 'roll.dat'
-        #{$prg} #{sub} -e 1 -p chi1
-             # extract the chi torsion angle of strand I, but exclude
-             # those from the two terminal base pairs. For comparison,
-             # run also: #{$prg} #{sub} -p chi1
-        #{$prg} #{sub} -a
-             # extract all parameters, each in a separate file
-Options:
-#{$sline}
-TXT
+                Usage:
+                        #{$prg} #{sub} options
+                Examples:
+                        #{$prg} #{sub} -l
+                             # to see a list of all parameters
+                        #{$prg} #{sub} -p prop
+                             # for propeller, no need to specify full: -p pr suffices
+                             # -p 36 also fine (see above); use '#{$oname}.out'
+                        #{$prg} #{sub} -p slide -s , -f #{$oname}3.out
+                             # comma separated, from file '#{$oname}3.out'
+                        #{$prg} #{sub} -p roll -s ' ' -n -o roll.dat
+                             # space separated, no row-label, to file 'roll.dat'
+                        #{$prg} #{sub} -e 1 -p chi1
+                             # extract the chi torsion angle of strand I, but exclude
+                             # those from the two terminal base pairs. For comparison,
+                             # run also: #{$prg} #{sub} -p chi1
+                        #{$prg} #{sub} -a
+                             # extract all parameters, each in a separate file
+                Options:
+                #{$sline}
+            TXT
         end
 
         def parse_end_bps(end_bps)
@@ -389,30 +391,30 @@ TXT
             ib = 0 if ib < 0
             ie ||= ib
             ie = 0 if ie < 0
-            $stderr.puts "\tend effects set to: -e #{ib} #{ie}" unless [ib, ie] == [0, 0]
+            warn "\tend effects set to: -e #{ib} #{ie}" unless [ib, ie] == [0, 0]
             [ib, ie]
         end
 
         def parse_options
             txt = docinfo
-            opts = Trollop::options do
+            opts = Trollop.options do
                 banner txt
-                opt :separator, "Separator for fields [\\t]", :default => "\t"
-                opt :par_name, "Name of parameter to extract", :type => :string
-                opt :fromfile, "Parameters file", :default => "#{$oname}.out"
-                opt :outfile, "File of selected parameter", :default => "stdout"
-                opt :end_bps, "Number of end pairs to ignore", :default => [0, 0]
+                opt :separator, "Separator for fields [\\t]", default: "\t"
+                opt :par_name, "Name of parameter to extract", type: :string
+                opt :fromfile, "Parameters file", default: "#{$oname}.out"
+                opt :outfile, "File of selected parameter", default: "stdout"
+                opt :end_bps, "Number of end pairs to ignore", default: [0, 0]
 
-                opt :all, "Extract all parameters into separate files", :default => false
-                opt :clean, "Clean up parameter files by the -a option", :default => false
-                opt :list, "List all parameters", :default => false
-                opt :no_1col, "Delete the first (label) column", :default => false
+                opt :all, "Extract all parameters into separate files", default: false
+                opt :clean, "Clean up parameter files by the -a option", default: false
+                opt :list, "List all parameters", default: false
+                opt :no_1col, "Delete the first (label) column", default: false
             end
             opts[:separator] = opts[:separator][0, 1] # keep just the first character
             opts[:end_bps] = parse_end_bps(opts[:end_bps])
             opts[:all] = false if opts[:par_name]
 
-            Trollop::die :fromfile, "must exist" unless File.exist?(opts[:fromfile])
+            Trollop.die :fromfile, "must exist" unless File.exist?(opts[:fromfile])
 
             opts
         end
@@ -445,12 +447,12 @@ TXT
             end
         end
 
-        def reorient_each_model(opts, renew_bpfile=false)
+        def reorient_each_model(opts, renew_bpfile = false)
             if opts[:frame]     # for frame_mol
                 if opts[:single]
                     Utils.run_cmd("#{$x3dna}find_pair -s #{$temp_model}.pdb #{$temp_model}.inp")
-                else
-                    Utils.update_bpfile(opts[:bpfile], $temp_model) if renew_bpfile
+                elsif renew_bpfile
+                    Utils.update_bpfile(opts[:bpfile], $temp_model)
                 end
                 Utils.run_cmd("#{$x3dna}analyze #{$temp_model}.inp #{$msg}") # get ref_frames.dat
                 opt = "#{opts[:frame]} ref_frames.dat #{$temp_model}.pdb #{$temp_model}_trx.pdb"
@@ -461,10 +463,10 @@ TXT
             end
         end
 
-        def append_transformed_coordinates(aFile, model, pdbfile, hmsg)
-            aFile.puts hmsg unless hmsg.empty?
-            aFile.puts "%6s    %4d" % ["MODEL ", model]
-            aFile.puts File.read(pdbfile).sub(/^END\s*$/, "ENDMDL")
+        def append_transformed_coordinates(afile, model, pdbfile, hmsg)
+            afile.puts hmsg unless hmsg.empty?
+            afile.puts "%6s    %4d" % ["MODEL ", model]
+            afile.puts File.read(pdbfile).sub(/^END\s*$/, "ENDMDL")
         end
 
         def reorient_ensemble_models(ensemble, models, opts)
@@ -476,7 +478,7 @@ TXT
             end
 
             tnum = models.size
-            File.open(opts[:outfile], "w") do |aFile|
+            File.open(opts[:outfile], "w") do |afile|
                 models.each_with_index do |model, num|
                     puts "Process model ##{model}\t#{num + 1} / #{tnum}"
                     cmd = "#{$x3dna}ex_str -nmr -#{model} #{ensemble} #{$temp_model}.pdb"
@@ -487,7 +489,7 @@ TXT
                     else
                         reorient_each_model(opts, num == 0)
                     end
-                    append_transformed_coordinates(aFile, model, "#{$temp_model}_trx.pdb", "")
+                    append_transformed_coordinates(afile, model, "#{$temp_model}_trx.pdb", "")
                 end
             end
         end
@@ -500,7 +502,7 @@ TXT
             end
 
             tnum = pdblist.size
-            File.open(opts[:outfile], "w") do |aFile|
+            File.open(opts[:outfile], "w") do |afile|
                 pdblist.each_with_index do |pdb, num|
                     puts "Process PDB file #{pdb}\t#{num + 1} / #{tnum}"
                     FileUtils.cp(pdb, "#{$temp_model}.pdb")
@@ -511,67 +513,67 @@ TXT
                         reorient_each_model(opts, num == 0)
                     end
                     hmsg = "REMARK ------ based on PDB file '#{pdb}'"
-                    append_transformed_coordinates(aFile, num + 1, "#{$temp_model}_trx.pdb", hmsg)
+                    append_transformed_coordinates(afile, num + 1, "#{$temp_model}_trx.pdb", hmsg)
                 end
             end
         end
 
         def docinfo
-            sub = 'reorient'
-            <<TXT
-#{$sline}
-Reorient models of a MODEL/ENDMDL delineated ensemble of NMR structures
-or MD trajectories based on user specified base-pair reference frame or
-rotation matrix. Coordinate transformation is performed by 'frame_mol' or
-'rotate_mol'. Useful for 'local' structural alignment. The transformed
-ensemble can be converted to an image using '#{$prg} blocview'
-and visualized with Jmol or PyMOL.
+            sub = "reorient"
+            <<~TXT
+                #{$sline}
+                Reorient models of a MODEL/ENDMDL delineated ensemble of NMR structures
+                or MD trajectories based on user specified base-pair reference frame or
+                rotation matrix. Coordinate transformation is performed by 'frame_mol' or
+                'rotate_mol'. Useful for 'local' structural alignment. The transformed
+                ensemble can be converted to an image using '#{$prg} blocview'
+                and visualized with Jmol or PyMOL.
 
-Usage:
-        #{$prg} #{sub} options
-Examples:
-        #{$prg} #{sub} -f 'm -6' -b bpfile.dat -e 2kei.pdb
-             # reorient each model using the reference frame of bp #6
-             #   with minor groove facing the viewer (-m)
-             # options to -f must be quoted, where dash is optional
-             #   generate '#{$model_list}', '#{$oname}_trx.pdb'
-        #{$prg} #{sub} -f '8,9' -b bpfile.dat -e 2kei.pdb
-             # reorient each model using the middle reference frame
-             #   between base-pairs #8 and #9
-        #{$prg} #{sub} -v -e 2kei.pdb -o extended_view.pdb
-             # transform the ensemble to its most extended view and
-             #   keep the original relative orientation.
-Options:
-#{$sline}
-TXT
+                Usage:
+                        #{$prg} #{sub} options
+                Examples:
+                        #{$prg} #{sub} -f 'm -6' -b bpfile.dat -e 2kei.pdb
+                             # reorient each model using the reference frame of bp #6
+                             #   with minor groove facing the viewer (-m)
+                             # options to -f must be quoted, where dash is optional
+                             #   generate '#{$model_list}', '#{$oname}_trx.pdb'
+                        #{$prg} #{sub} -f '8,9' -b bpfile.dat -e 2kei.pdb
+                             # reorient each model using the middle reference frame
+                             #   between base-pairs #8 and #9
+                        #{$prg} #{sub} -v -e 2kei.pdb -o extended_view.pdb
+                             # transform the ensemble to its most extended view and
+                             #   keep the original relative orientation.
+                Options:
+                #{$sline}
+            TXT
         end
 
         def parse_options
             txt = docinfo
-            opts = Trollop::options do
+            opts = Trollop.options do
                 banner txt
-                opt :bpfile, "Name of file containing base-pairing info", :type => :string
-                opt :outfile, "Output file", :default => "#{$oname}_trx.pdb"
+                opt :bpfile, "Name of file containing base-pairing info", type: :string
+                opt :outfile, "Output file", default: "#{$oname}_trx.pdb"
 
-                opt :single, "Single-stranded DNA/RNA", :default => false
+                opt :single, "Single-stranded DNA/RNA", default: false
 
-                opt :ensemble, "Ensemble delineated with MODEL/ENDMDL pairs", :type => :string
-                opt :models, "File containing an explicit list of model numbers", :type => :string
-                opt :pattern, "Pattern of model files to process (e.g., *.pdb)", :type => :string
-                opt :list, "File containing an explicit list of models", :type => :string
+                opt :ensemble, "Ensemble delineated with MODEL/ENDMDL pairs", type: :string
+                opt :models, "File containing an explicit list of model numbers", type: :string
+                opt :pattern, "Pattern of model files to process (e.g., *.pdb)", type: :string
+                opt :list, "File containing an explicit list of models", type: :string
 
-                opt :rotate, "Options to be transfered to rotate_mol (quoted)", :type => :string
-                opt :frame, "Options to be transfered to frame_mol (quoted)", :type => :string
+                opt :rotate, "Options to be transfered to rotate_mol (quoted)", type: :string
+                opt :frame, "Options to be transfered to frame_mol (quoted)", type: :string
 
-                opt :keep, "Keep the original relative orientation", :default => false
-                opt :bestview, "Set to the most extended view; keep orientation", :default => false, :short => '-v'
+                opt :keep, "Keep the original relative orientation", default: false
+                opt :bestview, "Set to the most extended view; keep orientation", default: false, short: "-v"
             end
             k = Utils.count_set_options([:ensemble, :models, :pattern, :list], opts)
             Utils.fatal("Specify only one of: ensemble|models|pattern|list") unless k == 1
 
-            Trollop::die :ensemble, "must exist" if opts[:ensemble] && !File.exist?(opts[:ensemble])
-            Trollop::die :models, "must exist" if opts[:models] && !File.exist?(opts[:models])
-            Trollop::die :list, "must exist" if opts[:list] && !File.exist?(opts[:list])
+            Trollop.die :ensemble, "must exist" if opts[:ensemble] && !File.exist?(opts[:ensemble])
+            Trollop.die :models, "must exist" if opts[:models] && !File.exist?(opts[:models])
+            Trollop.die :list, "must exist" if opts[:list] && !File.exist?(opts[:list])
 
             k = Utils.count_set_options([:rotate, :frame], opts)
             if k == 0 || opts[:bestview]
@@ -645,45 +647,45 @@ TXT
         end
 
         def docinfo
-            sub = 'blocview'
-            <<TXT
-#{$sline}
-Ensemble version of 'blocview', but WITHOUT coordinate transformation.
-Run '#{$prg} reorient' to set the structures in your preferred
-orientation. Raster3D (or PyMOL) and ImageMagick must be installed.
+            sub = "blocview"
+            <<~TXT
+                #{$sline}
+                Ensemble version of 'blocview', but WITHOUT coordinate transformation.
+                Run '#{$prg} reorient' to set the structures in your preferred
+                orientation. Raster3D (or PyMOL) and ImageMagick must be installed.
 
-Usage:
-        #{$prg} #{sub} options
-Examples:
-        #{$prg} #{sub} -e 2kei.pdb
-             # the whole ensemble, image named 'ensemble.png'
-        #{$prg} #{sub} --repr -i 2kei-selected.png -e 2kei.pdb
-             # the best representative model
-Options:
-#{$sline}
-TXT
+                Usage:
+                        #{$prg} #{sub} options
+                Examples:
+                        #{$prg} #{sub} -e 2kei.pdb
+                             # the whole ensemble, image named 'ensemble.png'
+                        #{$prg} #{sub} --repr -i 2kei-selected.png -e 2kei.pdb
+                             # the best representative model
+                Options:
+                #{$sline}
+            TXT
         end
 
         def parse_options
             txt = docinfo
-            opts = Trollop::options do
+            opts = Trollop.options do
                 banner txt
-                opt :ensemble, "name of PDB ensemble file", :type => :string, :short => "-e"
-                opt :imgfile, "name of image file", :default => "ensemble.png"
-                opt :r3dfile, "name of .r3d file", :default => "ensemble.r3d"
+                opt :ensemble, "name of PDB ensemble file", type: :string, short: "-e"
+                opt :imgfile, "name of image file", default: "ensemble.png"
+                opt :r3dfile, "name of .r3d file", default: "ensemble.r3d"
 
-                opt :dpi_pymol, "create PyMOL ray-traced image at specific DPI", :type => :integer
-                opt :scale, "set scale factor (for 'render' of Raster3D)", :type => :float
-                opt :repr, "use the representative (or first) model", :default => false, :short => "-m"
-                opt :begin_model, "first model to process", :default => 1
-                opt :end_model, "last model to process", :default => 100
-                opt :only_nucleic_acids, "only nucleic acids are includes", :default => false
+                opt :dpi_pymol, "create PyMOL ray-traced image at specific DPI", type: :integer
+                opt :scale, "set scale factor (for 'render' of Raster3D)", type: :float
+                opt :repr, "use the representative (or first) model", default: false, short: "-m"
+                opt :begin_model, "first model to process", default: 1
+                opt :end_model, "last model to process", default: 100
+                opt :only_nucleic_acids, "only nucleic acids are includes", default: false
 
-                opt :ball_and_stick, "get a ball-and-stick image", :default => false
-                opt :p_base_ring, "use only P and base ring atoms", :default => false, :short => "-c"
-                opt :no_ds, "do not show double-helix ribbon", :default => false
+                opt :ball_and_stick, "get a ball-and-stick image", default: false
+                opt :p_base_ring, "use only P and base ring atoms", default: false, short: "-c"
+                opt :no_ds, "do not show double-helix ribbon", default: false
             end
-            opts[:imgfile] += ".png" unless opts[:imgfile] =~ /\.png$/i
+            opts[:imgfile] += ".png" unless /\.png$/i.match?(opts[:imgfile])
 
             bkview = "--original --minor-groove"
             bkview += " --dpi-pymol #{opts[:dpi_pymol]}" if opts[:dpi_pymol]
