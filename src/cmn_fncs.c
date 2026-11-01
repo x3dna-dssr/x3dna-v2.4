@@ -4571,13 +4571,9 @@ void help3dna(char *program_name)
         fprintf(stderr, "Warning: no matching tag found\n");
     else {
         fprintf(stderr, "AUTHOR\n%s%s\n", prefix, Gvars.X3DNA_VER);
-        fprintf(stderr, "LICENSE\n%s%s\n", prefix, "Creative Commons Attribution"
-                " Non-Commercial License (CC BY-NC 4.0)");
-        fprintf(stderr, "%s%s\n", prefix, "See http://creativecommons.org/licenses/by-nc/4.0/"
-                " for details");
+        fprintf(stderr, "LICENSE\n%s%s\n", prefix, "BSD 3-Clause License");
         fprintf(stderr, "NOTE\n%s*** 3DNA HAS BEEN SUPERSEDED BY DSSR ***\n\n", prefix);
-        fprintf(stderr, "Please post questions/comments on the 3DNA Forum:"
-                " http://forum.x3dna.org/\n");
+        fprintf(stderr, "Please post questions/comments on https://github.com/orgs/x3dna-dssr/discussions\n");
     }
     print_sep(stderr, '=', nchar);
     close_file(fp);

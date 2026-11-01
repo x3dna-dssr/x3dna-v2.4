@@ -28,7 +28,7 @@ static void get_3dna_homedir(char *homedir)
         return;
     }
     fprintf(stderr, "Please set the X3DNA environment variable\n");
-    fatal("Run 'x3dna_setup', and visit http://forum.x3dna.org/ for more info.\n");
+    fatal("Run 'x3dna_setup', and visit https://github.com/orgs/x3dna-dssr/discussions\n");
 }
 
 static void get_3dna_version(char *homedir, char *version)

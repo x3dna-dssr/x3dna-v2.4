@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 ### Driver script to handle a MODEL/ENDMDL delineated ensemble
-###     3DNA v2.4.9-2025dec09, created and maintained by xiangjun@x3dna.org
+###     3DNA v2.4.10-2026nov01, created and maintained by xiangjun@x3dna.org
 
 $VERBOSE = true
 require ENV["X3DNA"] + "/lib/ensemble"
